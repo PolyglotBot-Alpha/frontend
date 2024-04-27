@@ -28,6 +28,84 @@
   color: #61dafb;
 }
 
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background-color: #0B1013;
+}
+
+.content{
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 20px;
+  transition: margin-left 0.3s;
+  background-color: #787D7B;
+}
+
+.buttonStyle{
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sideBar{
+  overflow: auto;
+  height: 100vh;
+  padding-top: 64px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.messageBox{
+  display: inline-block;
+  word-wrap: break-word;
+  max-width: 80%;
+  border: 2px;
+  padding: 5px;
+  border-radius: 10px;
+  color: white;
+  margin: 10px 0;
+}
+
+.messageArea{
+  padding-top: 70px;
+  min-height: 95vh;
+  max-width: 800px;
+  width: 100%;
+  transition: margin-left 0.3s;
+  background-color: #787D7B;
+  border-radius: 20px;
+}
+
+.inputBox{
+  position: fixed;
+  bottom: 5px;
+  right: 0;
+  min-height: 60px;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #787D7B;
+  margin-top: 10px;
+  max-width: 900px;
+  border-radius: 20px;
+  transition: left 0.3s;
+  width: 100%;
+}
+.avatar {
+  justify-self: center; /* 水平居中对齐 */
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -35,4 +113,30 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+@media (max-width: 768px) {
+.inputBox{
+  width: 75%;
+}
+
+.sideBar{
+  position: fixed;
+  width: 80%;
+  height: 100%;
+  z-index: 1000;
+}
+.inputBox{
+  z-index: 0;
+}
+.messageArea{
+  width: 80%;
+}
+.messageBox {
+  float: none;
+  margin: 10px 0;
+  text-align: center;
+  display: block;
+}
+
 }
