@@ -14,6 +14,7 @@ import {
 import { Avatar, Button, Layout, Menu, theme } from "antd";
 import { Input } from "antd";
 import UserImage from "../user.png";
+import GoogleSignIn from "./GoogleSignIn.js";
 const { TextArea } = Input;
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
@@ -32,6 +33,9 @@ const items = [
     getItem("Tom", "4"),
     getItem("Bill", "5"),
     getItem("Alex", "6"),
+  ]),
+  getItem("User", "sub1", <TeamOutlined />, [
+    <GoogleSignIn key="4" />, // Embedding GoogleSignIn directly in the menu
   ]),
   getItem("Team", "sub2", <TeamOutlined />, [
     getItem("Team 1", "7"),
@@ -155,36 +159,40 @@ function Main() {
           mode="inline"
           items={items}
         />
-        {/*<div*/}
-        {/*  className={"avatar"}*/}
-        {/*  style={{ textAlign: "center", color: "white" }}*/}
-        {/*>*/}
-        {/*  <Avatar style={{ marginRight: 10 }} src={UserImage} />*/}
-        {/*  username*/}
-        {/*</div>*/}
+        {/*<<<<<<< HEAD*/}
+        {/*        /!*<div*!/*/}
+        {/*        /!*  className={"avatar"}*!/*/}
+        {/*        /!*  style={{ textAlign: "center", color: "white" }}*!/*/}
+        {/*        /!*>*!/*/}
+        {/*        /!*  <Avatar style={{ marginRight: 10 }} src={UserImage} />*!/*/}
+        {/*        /!*  username*!/*/}
+        {/*        /!*</div>*!/*/}
 
-        {/*<div*/}
-        {/*  className="user"*/}
-        {/*  style={{*/}
-        {/*    display: "flex",*/}
-        {/*    flexWrap: "nowrap",*/}
-        {/*    justifyContent: "space-between",*/}
-        {/*    marginRight: "20px",*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  /!*<img src={currentUser.photoURL} alt="" />*!/*/}
-        {/*  <img src="./user.png" alt={""} />*/}
-        {/*  <span*/}
-        {/*    style={{*/}
-        {/*      whiteSpace: "nowrap",*/}
-        {/*      overflow: "hidden",*/}
-        {/*      textOverflow: "ellipsis",*/}
-        {/*      maxWidth: "150px",*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    /!*{currentUser.displayName}*!/*/}
-        {/*  </span>*/}
-        {/*</div>*/}
+        {/*        /!*<div*!/*/}
+        {/*        /!*  className="user"*!/*/}
+        {/*        /!*  style={{*!/*/}
+        {/*        /!*    display: "flex",*!/*/}
+        {/*        /!*    flexWrap: "nowrap",*!/*/}
+        {/*        /!*    justifyContent: "space-between",*!/*/}
+        {/*        /!*    marginRight: "20px",*!/*/}
+        {/*        /!*  }}*!/*/}
+        {/*        /!*>*!/*/}
+        {/*        /!*  /!*<img src={currentUser.photoURL} alt="" />*!/*!/*/}
+        {/*        /!*  <img src="./user.png" alt={""} />*!/*/}
+        {/*        /!*  <span*!/*/}
+        {/*        /!*    style={{*!/*/}
+        {/*        /!*      whiteSpace: "nowrap",*!/*/}
+        {/*        /!*      overflow: "hidden",*!/*/}
+        {/*        /!*      textOverflow: "ellipsis",*!/*/}
+        {/*        /!*      maxWidth: "150px",*!/*/}
+        {/*        /!*    }}*!/*/}
+        {/*        /!*  >*!/*/}
+        {/*        /!*    /!*{currentUser.displayName}*!/*!/*/}
+        {/*        /!*  </span>*!/*/}
+        {/*        /!*</div>*!/*/}
+        {/*=======*/}
+
+        {/*>>>>>>> b7083631074b3086d5d6693fd0aa7d860be10ef8*/}
       </Sider>
       <Layout style={{ height: "100%" }}>
         <Header className={"header"} />
