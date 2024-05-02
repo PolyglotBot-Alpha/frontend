@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 import "../App.css";
 import {
@@ -10,12 +10,18 @@ import {
   SoundOutlined,
   SendOutlined,
   HistoryOutlined,
+  GoogleOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import { Avatar, Button, Layout, Menu, theme } from "antd";
 import { Input } from "antd";
 import UserImage from "../user.png";
+import { auth, provider } from "../firebase-config.js";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 const { TextArea } = Input;
 const { Header, Content, Footer, Sider } = Layout;
+
 function getItem(label, key, icon, children) {
   return {
     key,
@@ -24,25 +30,10 @@ function getItem(label, key, icon, children) {
     label,
   };
 }
-const items = [
-  getItem("History", "1", <HistoryOutlined />),
-  getItem("Option 1", "2", <PieChartOutlined />),
-  getItem("Option 2", "3", <DesktopOutlined />),
-  getItem("User", "sub1", <UserOutlined />, [
-    getItem("Tom", "4"),
-    getItem("Bill", "5"),
-    getItem("Alex", "6"),
-  ]),
-  getItem("Team", "sub2", <TeamOutlined />, [
-    getItem("Team 1", "7"),
-    getItem("Team 2", "8"),
-  ]),
-  getItem("Files", "9", <FileOutlined />),
-  getItem("username", "10", <Avatar style={{ right: 10 }} src={UserImage} />),
-];
 
 function Main() {
-  // const { currentUser } = useContext(AuthContext);
+  //const { currentUser } = useContext(AuthContext);
+  const [user, setUser] = useState(null);
   const [messages, setMessages] = useState(() => {
     // Try to retrieve the chat history from localStorage
     const savedMessages = localStorage.getItem("chatMessages");
@@ -53,8 +44,39 @@ function Main() {
   useEffect(() => {
     // Listen for changes in messages and update localStorage
     localStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
+    const unsubscribe = onAuthStateChanged(auth, (User) => {
+      if (User) {
+        setUser(User);
+      } else {
+        setUser(null);
+      }
+    });
 
+    return () => unsubscribe();
+  }, [messages]);
+  const items = [
+    getItem("History", "1", <HistoryOutlined />),
+    getItem("Option 1", "2", <PieChartOutlined />),
+    getItem("Option 2", "3", <DesktopOutlined />),
+    getItem("User", "sub1", <UserOutlined />, [
+      getItem("Tom", "4"),
+      getItem("Bill", "5"),
+      getItem("Alex", "6"),
+    ]),
+    getItem("Team", "sub2", <TeamOutlined />, [
+      getItem("Team 1", "7"),
+      getItem("Team 2", "8"),
+    ]),
+    getItem("Files", "9", <FileOutlined />),
+    user
+      ? getItem(
+          user.displayName,
+          "10",
+          <Avatar style={{ right: 10 }} src={user.photoURL} />,
+          [getItem("Sign Out", "11", <LogoutOutlined />)],
+        )
+      : getItem("Sign in with Google", "10", <GoogleOutlined />),
+  ]; // menu contents
   const handleInputChange = (event) => {
     setInput(event.target.value);
   };
@@ -120,6 +142,24 @@ function Main() {
     MessageLeftValue = collapsed ? 50 : 100;
   }
 
+  const navigate = useNavigate();
+  //Handle all the click events of menu
+  const handleMenuClick = (e) => {
+    console.log("Menu item clicked:", e.key);
+    switch (e.key) {
+      case "10":
+        if (!user) {
+          navigate("/GoogleSignIn");
+        }
+        break;
+      case "11":
+        handleSignOut();
+    }
+  };
+  const handleSignOut = () => {
+    signOut(auth).catch((error) => console.error("Error signing out: ", error));
+  };
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth <= 768) {
@@ -149,83 +189,59 @@ function Main() {
         onCollapse={(value) => setCollapsed(value)}
       >
         <div className="demo-logo-vertical" />
+        {/*Sidebar menu part*/}
         <Menu
           theme="dark"
           defaultSelectedKeys={["1"]}
           mode="inline"
           items={items}
+          onClick={handleMenuClick}
         />
-        {/*<div*/}
-        {/*  className={"avatar"}*/}
-        {/*  style={{ textAlign: "center", color: "white" }}*/}
-        {/*>*/}
-        {/*  <Avatar style={{ marginRight: 10 }} src={UserImage} />*/}
-        {/*  username*/}
-        {/*</div>*/}
-
-        {/*<div*/}
-        {/*  className="user"*/}
-        {/*  style={{*/}
-        {/*    display: "flex",*/}
-        {/*    flexWrap: "nowrap",*/}
-        {/*    justifyContent: "space-between",*/}
-        {/*    marginRight: "20px",*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  /!*<img src={currentUser.photoURL} alt="" />*!/*/}
-        {/*  <img src="./user.png" alt={""} />*/}
-        {/*  <span*/}
-        {/*    style={{*/}
-        {/*      whiteSpace: "nowrap",*/}
-        {/*      overflow: "hidden",*/}
-        {/*      textOverflow: "ellipsis",*/}
-        {/*      maxWidth: "150px",*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    /!*{currentUser.displayName}*!/*/}
-        {/*  </span>*/}
-        {/*</div>*/}
+        {/*  Sidebar content*/}
       </Sider>
       <Layout style={{ height: "100%" }}>
         <Header className={"header"} />
         <Content className={"content"}>
+          {/*main contents*/}
           <div
             className={"messageArea"}
             style={{
               marginLeft: MessageLeftValue,
             }}
           >
-            <div>
-              {messages.map((message) => (
-                <div>
-                  <div
-                    className={"messageBox"}
-                    key={message.id}
-                    style={{
-                      float: message.sender === "bot" ? "left" : "right",
-                      textAlign: message.sender === "bot" ? "left" : "right",
-                      backgroundColor:
-                        message.sender === "bot"
-                          ? "rgba(134,193,102,0.61)"
-                          : "rgba(51,166,184,0.53)",
-                    }}
-                  >
-                    {message.text}
-                    {message.sender === "bot" && (
-                      <Button
-                        ghost
-                        onClick={() => playText(message.text)}
-                        className={"buttonStyle"}
-                      >
-                        <SoundOutlined />
-                      </Button>
-                    )}
-                  </div>
-                  <div style={{ clear: "both" }}></div>
+            {/*<div>*/}
+            {messages.map((message) => (
+              // set one Q&A as a group
+              <div>
+                <div
+                  className={"messageBox"}
+                  key={message.id}
+                  style={{
+                    float: message.sender === "bot" ? "left" : "right",
+                    textAlign: message.sender === "bot" ? "left" : "right",
+                    backgroundColor:
+                      message.sender === "bot"
+                        ? "rgba(134,193,102,0.61)"
+                        : "rgba(51,166,184,0.53)",
+                  }}
+                >
+                  {message.text}
+                  {message.sender === "bot" && (
+                    <Button
+                      ghost
+                      onClick={() => playText(message.text)}
+                      className={"buttonStyle"}
+                    >
+                      <SoundOutlined />
+                    </Button>
+                  )}
                 </div>
-              ))}
-            </div>
+                {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
+                <div style={{ clear: "both" }}></div>
+              </div>
+            ))}
           </div>
+          {/*</div>*/}
           <div
             className={"inputBox"}
             style={{
@@ -243,7 +259,6 @@ function Main() {
                 //color: "white",
               }}
             />
-            {/*<button onClick={handleSend}>Send</button>*/}
             <Button
               ghost
               onClick={handleSend}

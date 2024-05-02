@@ -103,7 +103,7 @@
   width: 100%;
 }
 .avatar {
-  justify-self: center; /* 水平居中对齐 */
+  justify-self: center;
 }
 
 @keyframes App-logo-spin {
