@@ -1,14 +1,17 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/Main.js';
-import GoogleSignIn from "./pages/GoogleSignIn.js";
-
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Main from "./pages/Main.js";
+import Register from "./pages/Register.js";
+import Login from "./pages/Login.js";
 function App() {
   return (
+    // <BrowserRouter> already in index.js
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<GoogleSignIn />} />
+      <Route path="/" element={<Main />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
     </Routes>
+    // </BrowserRouter>
   );
 }
 
