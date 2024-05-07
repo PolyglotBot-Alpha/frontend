@@ -16,7 +16,7 @@ function Main() {
         setCollapsed(true);
         setIsMobile(true);
       } else {
-        setCollapsed(false);
+        setCollapsed(true);
         setIsMobile(false);
       }
     };
