@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import InputArea from "./InputArea.js";
 import "../App.css";
-import { Button, Layout } from "antd";
-import { SoundOutlined } from "@ant-design/icons";
+import { Button, Layout, Spin } from "antd";
+import { SoundOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
 const { Content } = Layout;
 const MessageArea = () => {
@@ -33,6 +33,7 @@ const MessageArea = () => {
         className={"messageArea"}
         style={{
           marginLeft: MessageLeftValue,
+          paddingBottom: 900,
         }}
       >
         {/*<div>*/}

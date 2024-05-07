@@ -16,6 +16,8 @@ import { auth } from "../firebase-config.js";
 import { useNavigate } from "react-router-dom";
 import { useCollapsed } from "./Contexts.js";
 import GoogleSignIn from "./GoogleSignIn.js";
+import { useTranslation } from "react-i18next";
+import i18n from "../translations/i18n.js";
 
 const { Sider } = Layout;
 function getItem(label, key, icon, children) {
@@ -29,6 +31,7 @@ function getItem(label, key, icon, children) {
 const Sidebar = () => {
   const [user, setUser] = useState(null);
   const { collapsed, setCollapsed } = useCollapsed();
+  const { t, i18n } = useTranslation();
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (User) => {
       if (User) {
@@ -40,19 +43,19 @@ const Sidebar = () => {
     return () => unsubscribe();
   }, []);
   const items = [
-    getItem("History", "1", <HistoryOutlined />),
-    getItem("Option 1", "2", <PieChartOutlined />),
-    getItem("Option 2", "3", <DesktopOutlined />),
-    getItem("User", "sub1", <UserOutlined />, [
+    getItem(t("History"), "1", <HistoryOutlined />),
+    getItem(t("Option 1"), "2", <PieChartOutlined />),
+    getItem(t("Option 2"), "3", <DesktopOutlined />),
+    getItem(t("User"), "sub1", <UserOutlined />, [
       getItem("Tom", "4"),
       getItem("Bill", "5"),
       getItem("Alex", "6"),
     ]),
-    getItem("Team", "sub2", <TeamOutlined />, [
+    getItem(t("Team"), "sub2", <TeamOutlined />, [
       getItem("Team 1", "7"),
       getItem("Team 2", "8"),
     ]),
-    getItem("Files", "9", <FileOutlined />),
+    getItem(t("Files"), "9", <FileOutlined />),
   ]; // menu contents
 
   const navigate = useNavigate();

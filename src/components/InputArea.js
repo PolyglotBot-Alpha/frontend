@@ -4,8 +4,10 @@ import { SendOutlined } from "@ant-design/icons";
 import axios from "axios";
 import "../App.css";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
+import { useTranslation } from "react-i18next";
 const { TextArea } = Input;
 const InputArea = () => {
+  const { t, i18n } = useTranslation();
   const [input, setInput] = useState("");
   const { collapsed, setCollapsed } = useCollapsed();
   const { isMobile, setIsMobile } = useMobile();
@@ -59,7 +61,7 @@ const InputArea = () => {
       }}
     >
       <TextArea
-        placeholder="Something here..."
+        placeholder={t("input_holder")}
         autoSize={{ minRows: 1, maxRows: 4 }}
         value={input}
         onChange={handleInputChange}
