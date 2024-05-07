@@ -4,10 +4,14 @@ import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
 import DefaultAvatar from "../DefaultAvatar.jpeg";
 import { Avatar, Card, Tooltip, ConfigProvider } from "antd";
 import { LogoutOutlined, GoogleOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
+import axios, { interceptors } from "axios";
 // import { Avatar, Button } from "antd";
 const { Meta } = Card;
+
 function GoogleSignIn({ style }) {
   const [user, setUser] = useState(null);
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -18,6 +22,35 @@ function GoogleSignIn({ style }) {
       }
     });
   }, []);
+
+  // const [messages, setMessages] = useState([]);
+  // useEffect(() => {
+  //   const fetchMessages = async () => {
+  //     if (user && user.uid) {
+  //       const chatId = user.uid;
+  //       console.log("!!!");
+  //       console.log(user.id);
+  //       console.log(chatId);
+  //       console.log(user);
+  //       try {
+  //         const response = await axios.get(
+  //           `http://localhost:8081/chats/${chatId}`,
+  //         );
+  //         // const response = await axios.get(
+  //         //   `https://chat-message-service-a19d7ac6f5fa.herokuapp.com/chats/${chatId}`,
+  //         // );
+  //         setMessages(response.data);
+  //       } catch (error) {
+  //         console.error("Error fetching messages:", error);
+  //       }
+  //     } else {
+  //       console.log("user id undefined");
+  //       console.log(user);
+  //     }
+  //   };
+  //
+  //   fetchMessages();
+  // }, []);
 
   const handleSignIn = () => {
     signInWithPopup(auth, provider).catch((error) =>
@@ -54,7 +87,7 @@ function GoogleSignIn({ style }) {
         actions={
           user
             ? [
-                <Tooltip title="Sign Out">
+                <Tooltip title={t("SignOut")}>
                   <LogoutOutlined
                     key="SignOut"
                     style={{ color: "#f8f8f8" }}
@@ -63,7 +96,7 @@ function GoogleSignIn({ style }) {
                 </Tooltip>,
               ]
             : [
-                <Tooltip title="Sign in with Google">
+                <Tooltip title={t("GoogleSignIn")}>
                   <GoogleOutlined
                     key="GoogleSignIn"
                     style={{ color: "#f8f8f8" }}
@@ -82,9 +115,29 @@ function GoogleSignIn({ style }) {
             )
           }
           title={user ? user.displayName : "Visitor"}
+          // title={
+          //   <div>
+          //     {messages.map((message) => (
+          //       <div key={message.id}>
+          //         <p>
+          //           {message.sender}: {message.text}
+          //         </p>
+          //       </div>
+          //     ))}
+          //   </div>
+          // }
           //description="This is the description"
         />
       </Card>
+      {/*<div>*/}
+      {/*  {messages.map((message) => (*/}
+      {/*    <div key={message.id}>*/}
+      {/*      <p>*/}
+      {/*        {message.sender}: {message.text}*/}
+      {/*      </p>*/}
+      {/*    </div>*/}
+      {/*  ))}*/}
+      {/*</div>*/}
     </ConfigProvider>
   );
 }
