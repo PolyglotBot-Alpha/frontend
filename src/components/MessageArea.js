@@ -4,16 +4,46 @@ import "../App.css";
 import { Button, Layout } from "antd";
 import { SoundOutlined } from "@ant-design/icons";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
+import { useSelector, useDispatch } from 'react-redux'
+import axios from "axios";
+
 const { Content } = Layout;
 const MessageArea = () => {
   const { collapsed, setCollapsed } = useCollapsed();
   const { isMobile, setIsMobile } = useMobile();
-  const { messages, setMessages } = useMessages();
+  // const { messages, setMessages } = useMessages();
+  const messages = useSelector((state) => state.msgs.msgs)
+  const currChat = useSelector((state) => state.msgs.selectedChat)
+  const pendingMsgs = useSelector((state) => state.msgs.pendingMsg)
 
   useEffect(() => {
     // Listen for changes in messages and update localStorage
-    localStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
+    // localStorage.setItem("chatMessages", JSON.stringify(messages));
+    localStorage.setItem("msgs", JSON.stringify(messages));
+
+    // check for login status
+    // if (!login) return;
+
+    // find which data need to be synced
+    
+    // const delayHandle = setTimeout(()=>{
+    //   // sync local data with remote database
+
+    //   axios.post(process.env.REACT_APP_DB_URL, {
+    //     user_input: input,
+    //   }).then((response => {
+    //     
+    //   })).catch(error => {
+    //     console.error("Error fetching response:", error);
+    //   
+    //   });
+      
+    // }, 1500);
+
+    // return ()=>{
+    //   clearTimeout(delayHandle);
+    // }
+  }, [messages,currChat]);
 
   const playText = (text) => {
     const speech = new SpeechSynthesisUtterance(text);
@@ -36,9 +66,9 @@ const MessageArea = () => {
         }}
       >
         {/*<div>*/}
-        {messages.map((message) => (
+        {messages[currChat].map((message) => (
           // set one Q&A as a group
-          <div>
+          <div key={message.id}>
             <div
               className={"messageBox"}
               key={message.id}
@@ -65,6 +95,24 @@ const MessageArea = () => {
             {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
             <div style={{ clear: "both" }}></div>
           </div>
+        ))}
+
+        {Object.keys(pendingMsgs).map((msgId, idx) => (
+          <div key={pendingMsgs[msgId].id}>
+          <div
+            className={"messageBox"}
+            key={pendingMsgs[msgId].id}
+            style={{
+              float: "right",
+              textAlign: "right",
+              backgroundColor: "rgba(51,166,184,0.53)",
+            }}
+          >
+            {pendingMsgs[msgId].text}
+          </div>
+          {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
+          <div style={{ clear: "both" }}></div>
+        </div>
         ))}
       </div>
       <InputArea />

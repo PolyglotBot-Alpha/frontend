@@ -4,22 +4,39 @@ import { SendOutlined } from "@ant-design/icons";
 import axios from "axios";
 import "../App.css";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
+import { useSelector, useDispatch } from 'react-redux'
+import { addMsg, delMsg, pendMsg, removePendMsg, clearPendMsg } from './messageSlice.js'
+
 const { TextArea } = Input;
 const InputArea = () => {
   const [input, setInput] = useState("");
   const { collapsed, setCollapsed } = useCollapsed();
   const { isMobile, setIsMobile } = useMobile();
-  const { messages, setMessages } = useMessages();
+  // const { messages, setMessages } = useMessages();
+  // const message = useSelector((state) => state.msgs.msgs)
+  const dispatch = useDispatch();
+  const currChat = useSelector((state) => state.msgs.selectedChat);
 
+  // user input handler
   const handleInputChange = (event) => {
     setInput(event.target.value);
   };
 
+  // user click send button
   const handleSend = async () => {
-    const userMessage = { text: input, id: Date.now(), sender: "user" };
-    setMessages((messages) => [...messages, userMessage]);
+    // store user message to local database
+    const pendId = Date.now();
+    const userMessage = { 
+      text: input, 
+      id: pendId, 
+      sender: "user", 
+      synced: false 
+    };
+    dispatch(clearPendMsg());
+    dispatch(pendMsg(userMessage));
 
     try {
+      // communicate with essay generation api for result
       const response = await axios.post(process.env.REACT_APP_API_URL, {
         user_input: input,
       });
@@ -27,23 +44,32 @@ const InputArea = () => {
       const botMessage = {
         text: essay,
         audioUrl: audio_url,
-        id: Date.now() + 1,
+        id: pendId + 1,
         sender: "bot",
+        synced: false,
       };
-      setMessages((messages) => [...messages, botMessage]);
+      // pass result to context for display and save to local
+      // setMessages((messages) => [...messages, botMessage]);
+      dispatch(removePendMsg(pendId));
+      dispatch(addMsg(userMessage));
+      dispatch(addMsg(botMessage));
     } catch (error) {
       console.error("Error fetching response:", error);
       const errorMessage = {
         text: "Failed to fetch response from the server.",
-        id: Date.now() + 1,
+        id: pendId + 1,
         sender: "bot",
+        synced: false,
       };
-      setMessages((messages) => [...messages, errorMessage]);
+      // pass error result for display
+      // setMessages((messages) => [...messages, errorMessage]);
+      dispatch(pendMsg(errorMessage));
     }
 
-    setInput("");
+    setInput("");  // clear user input, ready for next message from user
   };
 
+  // initialize ui value
   let InputLeftValue;
   if (isMobile) {
     InputLeftValue = 90;
@@ -75,6 +101,7 @@ const InputArea = () => {
         style={{
           marginLeft: 10,
         }}
+        disabled={currChat==null}
       >
         <SendOutlined />
       </Button>
