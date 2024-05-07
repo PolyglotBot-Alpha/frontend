@@ -25,7 +25,6 @@ const Headbar = () => {
   ];
 
   const onClick = ({ key }) => {
-    console.log("已调用");
     switch (key) {
       case "en":
         i18n.changeLanguage("en");

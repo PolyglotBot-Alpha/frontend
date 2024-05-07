@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Collapsed Context
 const CollapsedContext = createContext({
-  collapsed: false,
+  collapsed: true,
   setCollapsed: () => {},
 });
 
