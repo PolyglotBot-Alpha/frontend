@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const savedMessages = localStorage.getItem("msgs");
-const initMessages = savedMessages ? JSON.parse(savedMessages) : {};
+// const savedMessages = localStorage.getItem("msgs");
+// const initMessages = savedMessages ? JSON.parse(savedMessages) : {};
 
 export const msgSlice = createSlice({
     name:'msgs',
     initialState: {
-        msgs: initMessages,
-        selectedChat: 1,
+        msgs: {},
+        selectedChat: null,
         pendingMsg: {},
     },
     reducers: {
@@ -28,6 +28,18 @@ export const msgSlice = createSlice({
             }
             state.msgs[state.selectedChat].push(action.payload)
         },
+        populateMsg: (state, action) => {
+            state.msgs[action.payload.chatId] = action.payload.msgs.map((msg)=>{
+                return {
+                    text: msg.messageContent,
+                    audioUrl: msg.audio,
+                    id: msg.messageId,
+                    chatId: msg.chatId,
+                    sender: msg.userId === "bot" ? "bot" : "user" ,
+                    synced: true,
+                };
+            })
+        },
         delMsg: (state, action) => {
             if (!state.selectedChat) return
             if (!state.msgs[state.selectedChat]) return
@@ -39,6 +51,6 @@ export const msgSlice = createSlice({
     }
 })
 
-export const {addMsg, delMsg, changeChat, pendMsg, removePendMsg, clearPendMsg} = msgSlice.actions
+export const {addMsg, delMsg, changeChat, pendMsg, removePendMsg, clearPendMsg, populateMsg} = msgSlice.actions
 
 export default msgSlice.reducer

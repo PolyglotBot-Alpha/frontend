@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import chatReducer from './chatSlice.js';
 import msgReducer from "./messageSlice.js";
+import userReducer from "./userSlice.js";
 
 // Collapsed Context
 const CollapsedContext = createContext({
@@ -47,6 +48,7 @@ const store = configureStore({
   reducer: {
     chats: chatReducer,
     msgs: msgReducer,
+    user: userReducer,
   }
 })
 

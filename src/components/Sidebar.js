@@ -10,7 +10,7 @@ import {
   GoogleOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { Avatar, Layout, Menu } from "antd";
+import { Avatar, Button, Layout, List, Menu, Skeleton } from "antd";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase-config.js";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,11 @@ import { useCollapsed } from "./Contexts.js";
 import GoogleSignIn from "./GoogleSignIn.js";
 import { useTranslation } from "react-i18next";
 import i18n from "../translations/i18n.js";
+import { useSelector, useDispatch } from 'react-redux'
+import { setUser, delUser } from './userSlice.js'
+import { addChat, setChat } from './chatSlice.js'
+import { changeChat } from './messageSlice.js'
+import axios from "axios";
 
 const { Sider } = Layout;
 function getItem(label, key, icon, children) {
@@ -29,19 +34,29 @@ function getItem(label, key, icon, children) {
   };
 }
 const Sidebar = () => {
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const { collapsed, setCollapsed } = useCollapsed();
   const { t, i18n } = useTranslation();
+
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user.user);
+  const chats = useSelector((state) => state.chats.chats);
+  const selectedChat = useSelector((state) => state.msgs.selectedChat);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (User) => {
       if (User) {
-        setUser(User);
+        // setUser(User);
+        dispatch(setUser(User));
+        loadChat().then(()=>{});
       } else {
-        setUser(null);
+        // setUser(null);
+        dispatch(delUser());
       }
     });
     return () => unsubscribe();
   }, []);
+
   const items = [
     getItem(t("History"), "1", <HistoryOutlined />),
     getItem(t("Option 1"), "2", <PieChartOutlined />),
@@ -72,6 +87,38 @@ const Sidebar = () => {
     }
   };
 
+  async function loadChat() {
+    if (user && user.uid) {
+      axios.get(
+        process.env.REACT_APP_DB_URL + "/chats/" + user.uid
+      ).then((resp) => {
+        dispatch(setChat(resp.data.data));
+      }).catch((e) => {
+        console.log("Load chat history from server failed");
+        console.log(e)
+      })
+    }
+  }
+
+
+  async function loadTest(uid) {
+    if (uid) {
+      axios.get(
+        process.env.REACT_APP_DB_URL + "/chats/" + uid
+      ).then((resp) => {
+        dispatch(setChat(resp.data.data));
+      }).catch((e) => {
+        console.log("Load chat history from server failed");
+        console.log(e)
+      })
+    }
+  }
+
+  useEffect(()=>{
+    loadChat().then(()=>{});
+    loadTest('azsfcjo3of').then(()=>{});
+  }, [])
+
   const handleSignOut = () => {
     signOut(auth).catch((error) => console.error("Error signing out: ", error));
   };
@@ -84,16 +131,29 @@ const Sidebar = () => {
     >
       <div className="demo-logo-vertical" />
       {/*Sidebar menu part*/}
-      <Menu
+      {/* <Menu
         theme="dark"
         defaultSelectedKeys={["1"]}
         mode="inline"
         items={items}
         onClick={handleMenuClick}
+      /> */}
+
+      <List
+        footer={<GoogleSignIn />}
+        dataSource={chats}
+        renderItem={(item, idx) => (
+          <List.Item key={item.chatId}>
+            <Button href="#" onClick={()=>{dispatch(changeChat(item.chatId))}}>
+              {item.chatName}
+            </Button>
+          </List.Item>
+        )}
       />
+
       {/*  Sidebar content*/}
       {/*<GoogleSignIn style={{ width: "auto", height: "auto" }} />*/}
-      <GoogleSignIn />
+      {/* <GoogleSignIn /> */}
     </Sider>
   );
 };

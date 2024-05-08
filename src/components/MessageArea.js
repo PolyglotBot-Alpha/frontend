@@ -5,6 +5,7 @@ import { Button, Layout, Spin } from "antd";
 import { SoundOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
 import { useSelector, useDispatch } from 'react-redux'
+import { populateMsg } from './messageSlice.js'
 import axios from "axios";
 
 const { Content } = Layout;
@@ -15,35 +16,53 @@ const MessageArea = () => {
   const messages = useSelector((state) => state.msgs.msgs)
   const currChat = useSelector((state) => state.msgs.selectedChat)
   const pendingMsgs = useSelector((state) => state.msgs.pendingMsg)
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    // Listen for changes in messages and update localStorage
-    // localStorage.setItem("chatMessages", JSON.stringify(messages));
-    localStorage.setItem("msgs", JSON.stringify(messages));
+    // load messages from DB when switch chat
+    if (currChat){
+      if (messages[currChat]) {return}
 
-    // check for login status
-    // if (!login) return;
+      axios.get(
+        process.env.REACT_APP_DB_URL + "/messages/" + currChat
+      ).then((resp) => {
+        dispatch(populateMsg({chatId: currChat, msgs: resp.data.data}))
+        console.log(resp.data.data)
+      }).catch((e) => {
+        console.log("Load message from DB failed")
+        console.log(e)
+      })
+    }
+  }, [currChat])
 
-    // find which data need to be synced
+  // useEffect(() => {
+  //   // Listen for changes in messages and update localStorage
+  //   // localStorage.setItem("chatMessages", JSON.stringify(messages));
+  //   localStorage.setItem("msgs", JSON.stringify(messages));
+
+  //   // check for login status
+  //   // if (!login) return;
+
+  //   // find which data need to be synced
     
-    // const delayHandle = setTimeout(()=>{
-    //   // sync local data with remote database
+  //   // const delayHandle = setTimeout(()=>{
+  //   //   // sync local data with remote database
 
-    //   axios.post(process.env.REACT_APP_DB_URL, {
-    //     user_input: input,
-    //   }).then((response => {
-    //     
-    //   })).catch(error => {
-    //     console.error("Error fetching response:", error);
-    //   
-    //   });
+  //   //   axios.post(process.env.REACT_APP_DB_URL, {
+  //   //     user_input: input,
+  //   //   }).then((response => {
+  //   //     
+  //   //   })).catch(error => {
+  //   //     console.error("Error fetching response:", error);
+  //   //   
+  //   //   });
       
-    // }, 1500);
+  //   // }, 1500);
 
-    // return ()=>{
-    //   clearTimeout(delayHandle);
-    // }
-  }, [messages,currChat]);
+  //   // return ()=>{
+  //   //   clearTimeout(delayHandle);
+  //   // }
+  // }, [messages,currChat]);
 
   const playText = (text) => {
     const speech = new SpeechSynthesisUtterance(text);
@@ -67,7 +86,7 @@ const MessageArea = () => {
         }}
       >
         {/*<div>*/}
-        {messages[currChat].map((message) => (
+        {currChat && messages[currChat] && messages[currChat].map((message) => (
           // set one Q&A as a group
           <div key={message.id}>
             <div
@@ -98,6 +117,7 @@ const MessageArea = () => {
           </div>
         ))}
 
+        {/* show generating message */}
         {Object.keys(pendingMsgs).map((msgId, idx) => (
           <div key={pendingMsgs[msgId].id}>
           <div

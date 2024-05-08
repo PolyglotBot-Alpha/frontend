@@ -1,12 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-const savedChats = localStorage.getItem("chats");
-const initChats = savedChats ? JSON.parse(savedChats) : [];
+// const savedChats = localStorage.getItem("chats");
+// const initChats = savedChats ? JSON.parse(savedChats) : [];
 
 export const chatSlice = createSlice({
     name:'chat',
     initialState: {
-        chats: initChats
+        chats: []
     },
     reducers: {
         addChat: (state, action) => {
@@ -14,10 +14,13 @@ export const chatSlice = createSlice({
         },
         delChat: (state, action) => {
             state.chats = state.chats.filter((e) => e['chatId'] != action.payload)
+        },
+        setChat: (state, action) => {
+            state.chats = action.payload;
         }
     }
 })
 
-export const {addChat, delChat} = chatSlice.actions
+export const {addChat, delChat, setChat} = chatSlice.actions
 
 export default chatSlice.reducer
