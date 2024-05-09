@@ -45,10 +45,9 @@ const Sidebar = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (User) => {
-      if (User) {
+      if (User && User.uid) {
         // setUser(User);
-        dispatch(setUser(User));
-        loadChat().then(()=>{});
+        dispatch(setUser(User.uid));
       } else {
         // setUser(null);
         dispatch(delUser());
@@ -56,6 +55,20 @@ const Sidebar = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(()=>{
+    if (!user) return
+
+    axios.get(
+      process.env.REACT_APP_DB_URL + "/chats/" + user
+    ).then((resp) => {
+      dispatch(setChat(resp.data.data));
+    }).catch((e) => {
+      console.log("Load chat history from server failed");
+      console.log(e)
+    })
+    
+  }, [user])
 
   const items = [
     getItem(t("History"), "1", <HistoryOutlined />),
@@ -87,37 +100,6 @@ const Sidebar = () => {
     }
   };
 
-  async function loadChat() {
-    if (user && user.uid) {
-      axios.get(
-        process.env.REACT_APP_DB_URL + "/chats/" + user.uid
-      ).then((resp) => {
-        dispatch(setChat(resp.data.data));
-      }).catch((e) => {
-        console.log("Load chat history from server failed");
-        console.log(e)
-      })
-    }
-  }
-
-
-  async function loadTest(uid) {
-    if (uid) {
-      axios.get(
-        process.env.REACT_APP_DB_URL + "/chats/" + uid
-      ).then((resp) => {
-        dispatch(setChat(resp.data.data));
-      }).catch((e) => {
-        console.log("Load chat history from server failed");
-        console.log(e)
-      })
-    }
-  }
-
-  useEffect(()=>{
-    loadChat().then(()=>{});
-    loadTest('azsfcjo3of').then(()=>{});
-  }, [])
 
   const handleSignOut = () => {
     signOut(auth).catch((error) => console.error("Error signing out: ", error));

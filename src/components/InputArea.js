@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Input } from "antd";
 import { SendOutlined } from "@ant-design/icons";
 import axios from "axios";
 import "../App.css";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
 import { useSelector, useDispatch } from 'react-redux'
-import { addMsg, delMsg, pendMsg, removePendMsg, clearPendMsg } from './messageSlice.js'
+import { addMsg, delMsg, pendMsg, removePendMsg, clearPendMsg, addUnsync, syncUnsync, setRetry } from './messageSlice.js'
 
 import { useTranslation } from "react-i18next";
 const { TextArea } = Input;
@@ -32,7 +32,7 @@ const InputArea = () => {
       text: input, 
       id: pendId, 
       sender: "user", 
-      synced: false 
+      chatId: currChat,
     };
     dispatch(clearPendMsg());
     dispatch(pendMsg(userMessage));
@@ -48,20 +48,19 @@ const InputArea = () => {
         audioUrl: audio_url,
         id: pendId + 1,
         sender: "bot",
-        synced: false,
+        chatId: currChat,
       };
       // pass result to context for display and save to local
       // setMessages((messages) => [...messages, botMessage]);
       dispatch(removePendMsg(pendId));
-      dispatch(addMsg(userMessage));
-      dispatch(addMsg(botMessage));
+      dispatch(addUnsync(userMessage));
+      dispatch(addUnsync(botMessage));
     } catch (error) {
       console.error("Error fetching response:", error);
       const errorMessage = {
         text: "Failed to fetch response from the server.",
         id: pendId + 1,
         sender: "bot",
-        synced: false,
       };
       // pass error result for display
       // setMessages((messages) => [...messages, errorMessage]);
@@ -70,6 +69,56 @@ const InputArea = () => {
 
     setInput("");  // clear user input, ready for next message from user
   };
+
+  const unsyncedMsgs = useSelector((state) => state.msgs.unsyncedMsgs);
+  const hasUnsync = useSelector((state)=>state.msgs.hasUnsync);
+  const user = useSelector(state=>state.user.user);
+  const retrying = useSelector(s=>s.msgs.retrying);
+  useEffect(() => {
+    if (!hasUnsync) return
+    if (!user) return
+    if (retrying) return
+
+    console.log("start to sync msg")
+
+    async function r(){
+      const unsyncedKeys = Object.keys(unsyncedMsgs)
+      unsyncedKeys.sort()
+      for(const pendId of unsyncedKeys){
+        var tryCount = 0;
+        var delay = 1100;
+        const maxRetry = 2;
+        while(tryCount < maxRetry){
+          try{
+            const currMsg = unsyncedMsgs[pendId]
+            const resu = await axios.post(process.env.REACT_APP_DB_URL +'/messages', {
+              "chatId": currMsg.chatId,
+              "userId": currMsg.sender == 'user' ? user: 'bot',
+              "messageContent": currMsg.text,
+              "audio": currMsg.audioUrl,
+            })
+            
+            dispatch(syncUnsync({pendId, messageId: pendId}))
+            break;
+          }catch(e){
+            tryCount += 1;
+            console.log(e)
+            if (tryCount === maxRetry){
+              console.log('Max retries reached when syncing message');
+              console.log(unsyncedMsgs[pendId])
+              return
+            }
+            console.warn('Retry ', tryCount ,' failed. Waiting ', delay, 'ms before next attempt')
+            await new Promise((resolve)=>setTimeout(resolve, delay))
+            delay *= 2;
+          }
+        }
+      }
+      dispatch(setRetry(false));
+    }
+
+    r()
+  }, [hasUnsync, user]);
 
   // initialize ui value
   let InputLeftValue;

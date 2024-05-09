@@ -5,7 +5,7 @@ import { Button, Layout, Spin } from "antd";
 import { SoundOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
 import { useSelector, useDispatch } from 'react-redux'
-import { populateMsg } from './messageSlice.js'
+import { pendMsg, populateMsg } from './messageSlice.js'
 import axios from "axios";
 
 const { Content } = Layout;
@@ -16,6 +16,7 @@ const MessageArea = () => {
   const messages = useSelector((state) => state.msgs.msgs)
   const currChat = useSelector((state) => state.msgs.selectedChat)
   const pendingMsgs = useSelector((state) => state.msgs.pendingMsg)
+  const unsyncedMsgs = useSelector((s)=>s.msgs.unsyncedMsgs)
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -27,7 +28,7 @@ const MessageArea = () => {
         process.env.REACT_APP_DB_URL + "/messages/" + currChat
       ).then((resp) => {
         dispatch(populateMsg({chatId: currChat, msgs: resp.data.data}))
-        console.log(resp.data.data)
+        console.log('Load messages form DB successful')
       }).catch((e) => {
         console.log("Load message from DB failed")
         console.log(e)
@@ -75,6 +76,40 @@ const MessageArea = () => {
   } else {
     MessageLeftValue = collapsed ? 50 : 100;
   }
+
+  function render(message){
+    return (
+      // set one Q&A as a group
+      <div key={message.id}>
+        <div
+          className={"messageBox"}
+          key={message.id}
+          style={{
+            float: message.sender === "bot" ? "left" : "right",
+            textAlign: message.sender === "bot" ? "left" : "right",
+            backgroundColor:
+              message.sender === "bot"
+                ? "rgba(134,193,102,0.61)"
+                : "rgba(51,166,184,0.53)",
+          }}
+        >
+          {message.text}
+          {message.sender === "bot" && (
+            <Button
+              ghost
+              onClick={() => playText(message.text)}
+              className={"buttonStyle"}
+            >
+              <SoundOutlined />
+            </Button>
+          )}
+        </div>
+        {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
+        <div style={{ clear: "both" }}></div>
+      </div>
+    )
+  }
+
   return (
     <Content className={"content"}>
       {/*main contents*/}
@@ -86,39 +121,12 @@ const MessageArea = () => {
         }}
       >
         {/*<div>*/}
-        {currChat && messages[currChat] && messages[currChat].map((message) => (
-          // set one Q&A as a group
-          <div key={message.id}>
-            <div
-              className={"messageBox"}
-              key={message.id}
-              style={{
-                float: message.sender === "bot" ? "left" : "right",
-                textAlign: message.sender === "bot" ? "left" : "right",
-                backgroundColor:
-                  message.sender === "bot"
-                    ? "rgba(134,193,102,0.61)"
-                    : "rgba(51,166,184,0.53)",
-              }}
-            >
-              {message.text}
-              {message.sender === "bot" && (
-                <Button
-                  ghost
-                  onClick={() => playText(message.text)}
-                  className={"buttonStyle"}
-                >
-                  <SoundOutlined />
-                </Button>
-              )}
-            </div>
-            {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
-            <div style={{ clear: "both" }}></div>
-          </div>
-        ))}
+        {/* show main messages */}
+        {currChat && messages[currChat] && messages[currChat].map((message) => render(message))}
 
         {/* show generating message */}
-        {Object.keys(pendingMsgs).map((msgId, idx) => (
+        {Object.keys(pendingMsgs).map((msgId, idx) => {
+          return (
           <div key={pendingMsgs[msgId].id}>
           <div
             className={"messageBox"}
@@ -134,7 +142,11 @@ const MessageArea = () => {
           {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
           <div style={{ clear: "both" }}></div>
         </div>
-        ))}
+        )}
+        )}
+
+        {/* show unsynced messages */}
+        {Object.keys(unsyncedMsgs).map((msgId, idx) => render(unsyncedMsgs[msgId])) }
       </div>
       <InputArea />
     </Content>
