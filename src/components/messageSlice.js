@@ -7,7 +7,7 @@ export const msgSlice = createSlice({
     name:'msgs',
     initialState: {
         msgs: {},
-        selectedChat: null,
+        selectedChat: -1,
         pendingMsg: {},
         unsyncedMsgs: {},
         hasUnsync: false,
@@ -46,6 +46,14 @@ export const msgSlice = createSlice({
             if (!state.msgs[state.selectedChat]) return
             state.msgs[state.selectedChat] = state.msgs[state.selectedChat].filter((e) => e['messageId'] != action.payload)
         },
+        logoutMsg: (s, act) =>{
+            s.msgs = {};
+            s.selectedChat = -1;
+            s.pendingMsg = {};
+            s.unsyncedMsgs = {};
+            s.hasUnsync = false;
+            s.retrying = false;
+        },
         addUnsync: (s, act) => {
             s.unsyncedMsgs[act.payload.id] = act.payload;
             s.hasUnsync = true;
@@ -74,7 +82,7 @@ export const msgSlice = createSlice({
 export const {
     addMsg, delMsg, changeChat, pendMsg, 
     removePendMsg, clearPendMsg, populateMsg, 
-    addUnsync, syncUnsync, setRetry
+    addUnsync, syncUnsync, setRetry, logoutMsg
 } = msgSlice.actions
 
 export default msgSlice.reducer

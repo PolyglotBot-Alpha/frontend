@@ -5,7 +5,8 @@ import axios from "axios";
 import "../App.css";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
 import { useSelector, useDispatch } from 'react-redux'
-import { addMsg, delMsg, pendMsg, removePendMsg, clearPendMsg, addUnsync, syncUnsync, setRetry } from './messageSlice.js'
+import { addMsg, delMsg, pendMsg, removePendMsg, clearPendMsg, addUnsync, syncUnsync, setRetry, changeChat } from './messageSlice.js'
+import { setChat } from './chatSlice.js'
 
 import { useTranslation } from "react-i18next";
 const { TextArea } = Input;
@@ -84,6 +85,29 @@ const InputArea = () => {
     async function r(){
       const unsyncedKeys = Object.keys(unsyncedMsgs)
       unsyncedKeys.sort()
+      var newChat = null;
+      if (unsyncedKeys.length && unsyncedMsgs[unsyncedKeys[0]].chatId == -1){
+        // user sent messages when not login, create a chat to store them
+        try{
+          await axios.post(process.env.REACT_APP_DB_URL + '/chats', {
+            'userId': user,
+            'chatName': "New Chat",
+          })
+          const resp = await axios.get(
+            process.env.REACT_APP_DB_URL + "/chats/" + user
+          )
+          dispatch(setChat(resp.data.data));
+          const data = resp.data.data;
+          const idList = data.map((x)=>x.chatId);
+          newChat = idList.reduce((x,y)=>Math.max(x,y), -Infinity);
+          if (newChat == -Infinity) throw new RangeError("Can't find the newly created Chat Id");
+          dispatch(changeChat(newChat));
+        }catch(e){
+          console.log("Failed to create a new Chat")
+          console.log(e)
+          return;
+        }
+      }
       for(const pendId of unsyncedKeys){
         var tryCount = 0;
         var delay = 1100;
@@ -92,7 +116,7 @@ const InputArea = () => {
           try{
             const currMsg = unsyncedMsgs[pendId]
             const resu = await axios.post(process.env.REACT_APP_DB_URL +'/messages', {
-              "chatId": currMsg.chatId,
+              "chatId": newChat ? newChat : currMsg.chatId,
               "userId": currMsg.sender == 'user' ? user: 'bot',
               "messageContent": currMsg.text,
               "audio": currMsg.audioUrl,
@@ -152,7 +176,7 @@ const InputArea = () => {
         style={{
           marginLeft: 10,
         }}
-        disabled={currChat==null}
+        // disabled={currChat==null}
       >
         <SendOutlined />
       </Button>

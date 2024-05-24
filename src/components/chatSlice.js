@@ -17,10 +17,13 @@ export const chatSlice = createSlice({
         },
         setChat: (state, action) => {
             state.chats = action.payload;
-        }
+        },
+        logoutChat: (s, act) => {
+            s.chats = [];
+        },
     }
 })
 
-export const {addChat, delChat, setChat} = chatSlice.actions
+export const {addChat, delChat, setChat, logoutChat} = chatSlice.actions
 
 export default chatSlice.reducer

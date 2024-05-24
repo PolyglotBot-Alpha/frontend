@@ -21,8 +21,7 @@ const MessageArea = () => {
 
   useEffect(() => {
     // load messages from DB when switch chat
-    if (currChat){
-      if (messages[currChat]) {return}
+    if (currChat > 0){
 
       axios.get(
         process.env.REACT_APP_DB_URL + "/messages/" + currChat
