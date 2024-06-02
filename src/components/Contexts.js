@@ -1,4 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { configureStore } from '@reduxjs/toolkit';
+import { Provider } from 'react-redux';
+import chatReducer from './chatSlice.js';
+import msgReducer from "./messageSlice.js";
+import userReducer from "./userSlice.js";
 
 // Collapsed Context
 const CollapsedContext = createContext({
@@ -38,6 +43,15 @@ const MessagesProvider = ({ children, value }) => (
   <MessagesContext.Provider value={value}>{children}</MessagesContext.Provider>
 );
 
+
+const store = configureStore({
+  reducer: {
+    chats: chatReducer,
+    msgs: msgReducer,
+    user: userReducer,
+  }
+})
+
 // Combined Provider
 export const AppContextProvider = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -58,9 +72,9 @@ export const AppContextProvider = ({ children }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("chatMessages", JSON.stringify(messages));
-  }, [messages]);
+  // useEffect(() => {
+  //   localStorage.setItem("chatMessages", JSON.stringify(messages));
+  // }, [messages]);
 
   const collapsedValue = { collapsed, setCollapsed };
   const mobileValue = { isMobile, setIsMobile };
@@ -69,7 +83,9 @@ export const AppContextProvider = ({ children }) => {
   return (
     <CollapsedProvider value={collapsedValue}>
       <MobileProvider value={mobileValue}>
-        <MessagesProvider value={messagesValue}>{children}</MessagesProvider>
+        <Provider store={store}>
+          <MessagesProvider value={messagesValue}>{children}</MessagesProvider>
+        </Provider>
       </MobileProvider>
     </CollapsedProvider>
   );
