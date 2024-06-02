@@ -24,7 +24,7 @@ const MessageArea = () => {
     if (currChat > 0){
 
       axios.get(
-        process.env.REACT_APP_DB_URL + "/messages/" + currChat
+        process.env.REACT_APP_DB_URL + "messages/" + currChat
       ).then((resp) => {
         dispatch(populateMsg({chatId: currChat, msgs: resp.data.data}))
         console.log('Load messages form DB successful')

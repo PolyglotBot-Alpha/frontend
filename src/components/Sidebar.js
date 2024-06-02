@@ -61,7 +61,7 @@ const Sidebar = () => {
   const updateChat = async ()=>{
     try{
       const resp = await axios.get(
-        process.env.REACT_APP_DB_URL + "/chats/" + user
+        process.env.REACT_APP_DB_URL + "chats/" + user
       )
       dispatch(setChat(resp.data.data));
       return resp.data.data;
@@ -82,7 +82,7 @@ const Sidebar = () => {
   const handleAddChat =  (chatName) => {
     if (!chatName) return
     if (!user) return
-    axios.post(process.env.REACT_APP_DB_URL + '/chats', {
+    axios.post(process.env.REACT_APP_DB_URL + 'chats', {
       'userId': user,
       'chatName': chatName,
     }).then(()=>{

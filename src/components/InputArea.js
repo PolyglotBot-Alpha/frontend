@@ -89,12 +89,12 @@ const InputArea = () => {
       if (unsyncedKeys.length && unsyncedMsgs[unsyncedKeys[0]].chatId == -1){
         // user sent messages when not login, create a chat to store them
         try{
-          await axios.post(process.env.REACT_APP_DB_URL + '/chats', {
+          await axios.post(process.env.REACT_APP_DB_URL + 'chats', {
             'userId': user,
             'chatName': "New Chat",
           })
           const resp = await axios.get(
-            process.env.REACT_APP_DB_URL + "/chats/" + user
+            process.env.REACT_APP_DB_URL + "chats/" + user
           )
           dispatch(setChat(resp.data.data));
           const data = resp.data.data;
@@ -115,13 +115,13 @@ const InputArea = () => {
         while(tryCount < maxRetry){
           try{
             const currMsg = unsyncedMsgs[pendId]
-            const resu = await axios.post(process.env.REACT_APP_DB_URL +'/messages', {
+            const resu = await axios.post(process.env.REACT_APP_DB_URL +'messages', {
               "chatId": newChat ? newChat : currMsg.chatId,
               "userId": currMsg.sender == 'user' ? user: 'bot',
               "messageContent": currMsg.text,
               "audio": currMsg.audioUrl,
             })
-            
+            debugger;
             dispatch(syncUnsync({pendId, messageId: pendId}))
             break;
           }catch(e){
