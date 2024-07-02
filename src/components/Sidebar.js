@@ -9,8 +9,19 @@ import {
   HistoryOutlined,
   GoogleOutlined,
   LogoutOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Layout, List, Menu, Skeleton, Input, Space, ConfigProvider } from "antd";
+import {
+  Avatar,
+  Button,
+  Layout,
+  List,
+  Menu,
+  Skeleton,
+  Input,
+  Space,
+  ConfigProvider,
+} from "antd";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase-config.js";
 import { useNavigate } from "react-router-dom";
@@ -18,11 +29,12 @@ import { useCollapsed } from "./Contexts.js";
 import GoogleSignIn from "./GoogleSignIn.js";
 import { useTranslation } from "react-i18next";
 import i18n from "../translations/i18n.js";
-import { useSelector, useDispatch } from 'react-redux'
-import { setUser, delUser } from './userSlice.js'
-import { addChat, setChat, logoutChat } from './chatSlice.js'
-import { changeChat, logoutMsg } from './messageSlice.js'
+import { useSelector, useDispatch } from "react-redux";
+import { setUser, delUser } from "./userSlice.js";
+import { addChat, setChat, logoutChat } from "./chatSlice.js";
+import { changeChat, logoutMsg } from "./messageSlice.js";
 import axios from "axios";
+import Payment from "../pages/Payment.js";
 
 const { Sider } = Layout;
 function getItem(label, key, icon, children) {
@@ -58,43 +70,43 @@ const Sidebar = () => {
     return () => unsubscribe();
   }, []);
 
-  const updateChat = async ()=>{
-    try{
+  const updateChat = async () => {
+    try {
       const resp = await axios.get(
-        process.env.REACT_APP_DB_URL + "chats/" + user
-      )
+        process.env.REACT_APP_DB_URL + "chats/" + user,
+      );
       dispatch(setChat(resp.data.data));
       return resp.data.data;
-    }catch(e){
+    } catch (e) {
       console.log("Load chat history from server failed");
-      console.log(e)
+      console.log(e);
     }
-  }
-  useEffect(()=>{
+  };
+  useEffect(() => {
     // fetch chat list from database when user login
-    if (!user) return
+    if (!user) return;
 
-    updateChat().then(()=>{});
-    
-  }, [user])
+    updateChat().then(() => {});
+  }, [user]);
 
   const [chatNameIpt, setChatNameIpt] = useState("");
-  const handleAddChat =  (chatName) => {
-    if (!chatName) return
-    if (!user) return
-    axios.post(process.env.REACT_APP_DB_URL + 'chats', {
-      'userId': user,
-      'chatName': chatName,
-    }).then(()=>{
-      updateChat().then((resp)=>{
-        const chatIds = resp.map((x)=>x.chatId);
-        const newId = chatIds.reduce((x,y)=>Math.max(x,y), -Infinity);
-        dispatch(changeChat(newId));
-        setChatNameIpt("");
+  const handleAddChat = (chatName) => {
+    if (!chatName) return;
+    if (!user) return;
+    axios
+      .post(process.env.REACT_APP_DB_URL + "chats", {
+        userId: user,
+        chatName: chatName,
+      })
+      .then(() => {
+        updateChat().then((resp) => {
+          const chatIds = resp.map((x) => x.chatId);
+          const newId = chatIds.reduce((x, y) => Math.max(x, y), -Infinity);
+          dispatch(changeChat(newId));
+          setChatNameIpt("");
+        });
       });
-      
-    })
-  }
+  };
 
   const items = [
     getItem(t("History"), "1", <HistoryOutlined />),
@@ -126,10 +138,13 @@ const Sidebar = () => {
     }
   };
 
-
   const handleSignOut = () => {
     signOut(auth).catch((error) => console.error("Error signing out: ", error));
   };
+  const handleSubscribe = () => {
+    window.open("/payment", "_blank");
+  };
+
   return (
     <Sider
       className={"sideBar"}
@@ -146,41 +161,67 @@ const Sidebar = () => {
         items={items}
         onClick={handleMenuClick}
       /> */}
-      <Input.Search placeholder="Chat Name" enterButton={t("New Chat")} onSearch={(val)=>{handleAddChat(val)}} value={chatNameIpt} onChange={(e)=>{setChatNameIpt(e.target.value)}} disabled={user == null} style={{display: user==null?'none':''}} />
-      
+      <Input.Search
+        placeholder="Chat Name"
+        enterButton={t("New Chat")}
+        onSearch={(val) => {
+          handleAddChat(val);
+        }}
+        value={chatNameIpt}
+        onChange={(e) => {
+          setChatNameIpt(e.target.value);
+        }}
+        disabled={user == null}
+        style={{ display: user == null ? "none" : "" }}
+      />
+
       <ConfigProvider
         theme={{
-          components:{
-            List:{
+          components: {
+            List: {
               itemPadding: "2px 0",
-            }
-          }
-      }}>
-      <List
-        footer={<GoogleSignIn />}
-        dataSource={chats}
-        renderItem={(item, idx) => (
-          <List.Item key={item.chatId}>
-            <Button 
-            type="text" block 
-            href="#" 
-            onClick={()=>{dispatch(changeChat(item.chatId))}}
-            style={{border: "1px solid #4e4f97",
-              background: "#0f2540",
-              color: "#f8f8f8",
-            }}
-            
-            >
-              {item.chatName}
-            </Button>
-          </List.Item>
-        )}
-      />
+            },
+          },
+        }}
+      >
+        <List
+          footer={<GoogleSignIn />}
+          dataSource={chats}
+          renderItem={(item, idx) => (
+            <List.Item key={item.chatId}>
+              <Button
+                type="text"
+                block
+                href="#"
+                onClick={() => {
+                  dispatch(changeChat(item.chatId));
+                }}
+                style={{
+                  border: "1px solid #4e4f97",
+                  background: "#0f2540",
+                  color: "#f8f8f8",
+                }}
+              >
+                {item.chatName}
+              </Button>
+            </List.Item>
+          )}
+        />
       </ConfigProvider>
 
       {/*  Sidebar content*/}
       {/*<GoogleSignIn style={{ width: "auto", height: "auto" }} />*/}
       {/* <GoogleSignIn /> */}
+      <Button
+        ghost
+        onClick={handleSubscribe}
+        style={{
+          paddingInline: collapsed ? 5 : 65,
+        }}
+        // disabled={currChat==null}
+      >
+        Subscribe
+      </Button>
     </Sider>
   );
 };

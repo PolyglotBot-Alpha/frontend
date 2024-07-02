@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Main from "./pages/Main.js";
 import Register from "./pages/Register.js";
 import Login from "./pages/Login.js";
+import Payment from "./pages/Payment.js";
 function App() {
   return (
     // <BrowserRouter> already in index.js
@@ -10,6 +11,7 @@ function App() {
       <Route path="/" element={<Main />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/payment" element={<Payment />} />
     </Routes>
     // </BrowserRouter>
   );
