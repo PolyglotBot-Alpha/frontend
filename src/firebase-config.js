@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// 从环境变量中读取 Firebase 配置
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
   authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -9,11 +9,12 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_APP_ID,
-  measurementId: process.env.REACT_APP_MEASUREMENT_ID
+  measurementId: process.env.REACT_APP_MEASUREMENT_ID,
 };
 
+// 初始化 Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-export { auth, provider };
+export { auth, provider, signInWithPopup };

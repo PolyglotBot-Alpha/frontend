@@ -4,8 +4,8 @@ import "../App.css";
 import { Button, Layout, Spin } from "antd";
 import { SoundOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useCollapsed, useMessages, useMobile } from "./Contexts.js";
-import { useSelector, useDispatch } from 'react-redux'
-import { pendMsg, populateMsg } from './messageSlice.js'
+import { useSelector, useDispatch } from "react-redux";
+import { pendMsg, populateMsg } from "./messageSlice.js";
 import axios from "axios";
 
 const { Content } = Layout;
@@ -13,56 +13,27 @@ const MessageArea = () => {
   const { collapsed, setCollapsed } = useCollapsed();
   const { isMobile, setIsMobile } = useMobile();
   // const { messages, setMessages } = useMessages();
-  const messages = useSelector((state) => state.msgs.msgs)
-  const currChat = useSelector((state) => state.msgs.selectedChat)
-  const pendingMsgs = useSelector((state) => state.msgs.pendingMsg)
-  const unsyncedMsgs = useSelector((s)=>s.msgs.unsyncedMsgs)
+  const messages = useSelector((state) => state.msgs.msgs);
+  const currChat = useSelector((state) => state.msgs.selectedChat);
+  const pendingMsgs = useSelector((state) => state.msgs.pendingMsg);
+  const unsyncedMsgs = useSelector((s) => s.msgs.unsyncedMsgs);
   const dispatch = useDispatch();
 
   useEffect(() => {
     // load messages from DB when switch chat
-    if (currChat > 0){
-
-      axios.get(
-        process.env.REACT_APP_DB_URL + "messages/" + currChat
-      ).then((resp) => {
-        dispatch(populateMsg({chatId: currChat, msgs: resp.data.data}))
-        console.log('Load messages form DB successful')
-      }).catch((e) => {
-        console.log("Load message from DB failed")
-        console.log(e)
-      })
+    if (currChat > 0) {
+      axios
+        .get(process.env.REACT_APP_DB_URL + "messages/" + currChat)
+        .then((resp) => {
+          dispatch(populateMsg({ chatId: currChat, msgs: resp.data.data }));
+          console.log("Load messages form DB successful");
+        })
+        .catch((e) => {
+          console.log("Load message from DB failed");
+          console.log(e);
+        });
     }
-  }, [currChat])
-
-  // useEffect(() => {
-  //   // Listen for changes in messages and update localStorage
-  //   // localStorage.setItem("chatMessages", JSON.stringify(messages));
-  //   localStorage.setItem("msgs", JSON.stringify(messages));
-
-  //   // check for login status
-  //   // if (!login) return;
-
-  //   // find which data need to be synced
-    
-  //   // const delayHandle = setTimeout(()=>{
-  //   //   // sync local data with remote database
-
-  //   //   axios.post(process.env.REACT_APP_DB_URL, {
-  //   //     user_input: input,
-  //   //   }).then((response => {
-  //   //     
-  //   //   })).catch(error => {
-  //   //     console.error("Error fetching response:", error);
-  //   //   
-  //   //   });
-      
-  //   // }, 1500);
-
-  //   // return ()=>{
-  //   //   clearTimeout(delayHandle);
-  //   // }
-  // }, [messages,currChat]);
+  }, [currChat]);
 
   const playText = (text) => {
     const speech = new SpeechSynthesisUtterance(text);
@@ -76,10 +47,11 @@ const MessageArea = () => {
     MessageLeftValue = collapsed ? 50 : 100;
   }
 
-  function render(message){
+  function render(message) {
     return (
       // set one Q&A as a group
       <div key={message.id}>
+        {/*<img src={`${process.env.PUBLIC_URL}/Bridget.gif`} alt="Loading" />*/}
         <div
           className={"messageBox"}
           key={message.id}
@@ -106,7 +78,7 @@ const MessageArea = () => {
         {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
         <div style={{ clear: "both" }}></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -116,36 +88,41 @@ const MessageArea = () => {
         className={"messageArea"}
         style={{
           marginLeft: MessageLeftValue,
-          paddingBottom: 900,
+          // paddingBottom: 600,
+          backgroundImage: `url(${process.env.PUBLIC_URL}/Bridget.gif)`,
+          // backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
         }}
       >
         {/*<div>*/}
         {/* show main messages */}
-        {currChat && messages[currChat] && messages[currChat].map((message) => render(message))}
-
+        {currChat &&
+          messages[currChat] &&
+          messages[currChat].map((message) => render(message))}
         {/* show generating message */}
         {Object.keys(pendingMsgs).map((msgId, idx) => {
           return (
-          <div key={pendingMsgs[msgId].id}>
-          <div
-            className={"messageBox"}
-            key={pendingMsgs[msgId].id}
-            style={{
-              float: "right",
-              textAlign: "right",
-              backgroundColor: "rgba(51,166,184,0.53)",
-            }}
-          >
-            {pendingMsgs[msgId].text}
-          </div>
-          {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
-          <div style={{ clear: "both" }}></div>
-        </div>
-        )}
-        )}
-
+            <div key={pendingMsgs[msgId].id}>
+              <div
+                className={"messageBox"}
+                key={pendingMsgs[msgId].id}
+                style={{
+                  float: "right",
+                  textAlign: "right",
+                  backgroundColor: "rgba(51,166,184,0.53)",
+                }}
+              >
+                {pendingMsgs[msgId].text}
+              </div>
+              {/*  clear the float attribute ensures that new message groups are displayed on newlines*/}
+              <div style={{ clear: "both" }}></div>
+            </div>
+          );
+        })}
         {/* show unsynced messages */}
-        {Object.keys(unsyncedMsgs).map((msgId, idx) => render(unsyncedMsgs[msgId])) }
+        {Object.keys(unsyncedMsgs).map((msgId, idx) =>
+          render(unsyncedMsgs[msgId]),
+        )}
       </div>
       <InputArea />
     </Content>
