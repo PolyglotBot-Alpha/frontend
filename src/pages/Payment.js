@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -6,21 +6,33 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
-const PaymentForm = () => {
+const PaymentForm = ({ selectedPlan }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const [selectedPlan, setSelectedPlan] = useState("yearly");
   const [postalCode, setPostalCode] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const auth = getAuth();
+  const navigate = useNavigate();
 
-  const handlePlanChange = (event) => {
-    setSelectedPlan(event.target.id);
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        navigate("/login");
+      } else {
+        setUser(user);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, navigate]);
 
   const validateInputs = () => {
     const newErrors = {};
@@ -51,20 +63,22 @@ const PaymentForm = () => {
           return;
         }
 
-        const amount = selectedPlan === "yearly" ? 8000 : 700;
+        const userID = user.uid;
+        const tokenID = token.id;
+        console.log(userID);
+        console.log(token.id);
         const response = await axios.post(
-          `${process.env.REACT_APP_API_BASE_URL}/subscription/charge`,
-          {},
+          `${process.env.REACT_APP_API_BASE_URL}/user/users/subscribe`,
           {
-            headers: {
-              token: token.id,
-              amount: amount,
-            },
+            userId: userID,
+            subscriptionType: selectedPlan,
+            token: tokenID,
           },
         );
 
         if (response.status === 200) {
           alert("Payment processed successfully!");
+          navigate("/");
         } else {
           alert("Payment failed. Please try again.");
         }
@@ -121,7 +135,7 @@ const PaymentForm = () => {
 };
 
 const Payment = () => {
-  const [selectedPlan, setSelectedPlan] = useState("yearly");
+  const [selectedPlan, setSelectedPlan] = useState("");
 
   const handlePlanChange = (event) => {
     setSelectedPlan(event.target.id);
@@ -134,12 +148,12 @@ const Payment = () => {
         <div className="mb-4">
           <div className="text-lg font-semibold">PolyglotBot Pro</div>
         </div>
-        <div className="mb-6">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mb-6 w">
+          <div className="grid grid-cols-3 gap-4">
             <label
-              htmlFor="yearly"
+              htmlFor="ONE_YEAR"
               className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer ${
-                selectedPlan === "yearly"
+                selectedPlan === "ONE_YEAR"
                   ? "border-purple-500 bg-purple-100"
                   : ""
               }`}
@@ -148,18 +162,18 @@ const Payment = () => {
               <input
                 type="radio"
                 name="billingPlan"
-                id="yearly"
+                id="ONE_YEAR"
                 className="hidden"
-                checked={selectedPlan === "yearly"}
+                checked={selectedPlan === "ONE_YEAR"}
                 onChange={handlePlanChange}
               />
               <div className="text-lg font-medium">Billed Yearly</div>
               <div className="text-2xl font-bold">$80</div>
             </label>
             <label
-              htmlFor="monthly"
+              htmlFor="ONE_MONTH"
               className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer ${
-                selectedPlan === "monthly"
+                selectedPlan === "ONE_MONTH"
                   ? "border-purple-500 bg-purple-100"
                   : ""
               }`}
@@ -168,18 +182,38 @@ const Payment = () => {
               <input
                 type="radio"
                 name="billingPlan"
-                id="monthly"
+                id="ONE_MONTH"
                 className="hidden"
-                checked={selectedPlan === "monthly"}
+                checked={selectedPlan === "ONE_MONTH"}
                 onChange={handlePlanChange}
               />
               <div className="text-lg font-medium">Billed Monthly</div>
               <div className="text-2xl font-bold">$7</div>
             </label>
+            <label
+              htmlFor="ONE_WEEK"
+              className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer ${
+                selectedPlan === "ONE_WEEK"
+                  ? "border-purple-500 bg-purple-100"
+                  : ""
+              }`}
+              onClick={handlePlanChange}
+            >
+              <input
+                type="radio"
+                name="billingPlan"
+                id="ONE_WEEK"
+                className="hidden"
+                checked={selectedPlan === "ONE_WEEK"}
+                onChange={handlePlanChange}
+              />
+              <div className="text-lg font-medium">Billed Weekly</div>
+              <div className="text-2xl font-bold">$1</div>
+            </label>
           </div>
         </div>
         <Elements stripe={stripePromise}>
-          <PaymentForm />
+          <PaymentForm selectedPlan={selectedPlan} />
         </Elements>
       </div>
     </div>

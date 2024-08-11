@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,8 @@ import {
   AudioOutlined,
   GlobalOutlined,
 } from "@ant-design/icons";
-
+import { format } from "date-fns";
+import SenddingAlert from "../components/SenddingAlert.js";
 const Main = () => {
   const [userId, setUserId] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -18,8 +19,14 @@ const Main = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [userPhotoURL, setUserPhotoURL] = useState("");
   const [language, setLanguage] = useState("en-US");
+  const [expiryDate, setExpiryDate] = useState(null);
+  const [formattedDate, setFormattedDate] = useState("");
+  // const [api, contextHolder] = notification.useNotification();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
   const auth = getAuth();
   const navigate = useNavigate();
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,7 +34,7 @@ const Main = () => {
         navigate("/login");
       } else {
         setUserId(user.uid);
-        console.log(userId);
+        setUserPhotoURL(user.photoURL);
       }
     });
 
@@ -36,16 +43,23 @@ const Main = () => {
 
   useEffect(() => {
     if (userId) {
+      getSubscriptionExpiryDate(userId);
       fetchChatHistory();
     }
   }, [userId]);
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
   const fetchChatHistory = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/history/${userId}`,
+        `${process.env.REACT_APP_API_BASE_URL}/chat/chat/${userId}`,
       );
-      setChatHistory(response.data);
+      setMessages(response.data);
     } catch (error) {
       console.error("Error fetching chat history", error);
     }
@@ -53,6 +67,12 @@ const Main = () => {
 
   const handleSendMessage = async () => {
     if (!prompt.trim()) return;
+    const currentDate = new Date();
+
+    if (currentDate > expiryDate) {
+      setAlertVisible(true);
+      return;
+    }
 
     const userInput = { userId, prompt };
     const newMessage = {
@@ -66,7 +86,7 @@ const Main = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/chat/chat`,
+        `${process.env.REACT_APP_API_BASE_URL}/chat/chat/chat`,
         userInput,
       );
       const updatedMessages = [
@@ -106,7 +126,22 @@ const Main = () => {
       {/* Add more languages as needed */}
     </Menu>
   );
-
+  const getSubscriptionExpiryDate = async (userId) => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/user/users/${userId}`,
+      );
+      const user = response.data;
+      const expiryDate = new Date(user.subscriptionExpiryDate);
+      setExpiryDate(expiryDate);
+      const formattedExpiryDate = format(expiryDate, "MMMM dd, yyyy");
+      setFormattedDate(formattedExpiryDate);
+      console.log(`Subscription Expiry Date for user ${userId}:`, expiryDate);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
+  };
   const inputSuffix = (
     <div style={{ display: "flex", alignItems: "center" }}>
       <AudioOutlined
@@ -121,13 +156,16 @@ const Main = () => {
 
   return (
     <div
-      className={"rounded-xl mt-4 mx-auto w-10/12"}
+      className={
+        "mx-auto mt-4 h-[80vh] w-10/12 bg-cover bg-center rounded-xl bg-no-repeat"
+      }
       style={{
         backgroundImage: `url(${process.env.PUBLIC_URL}/Login.jpg)`,
       }}
     >
-      <div className="container bg-black border-4 border-black bg-opacity-60 rounded-xl">
-        <div className="chat-history mb-4">
+      {alertVisible && <SenddingAlert setAlertVisible={setAlertVisible} />}
+      <div className="bg-black bg-opacity-60 border-4 border-black rounded-xl h-full flex flex-col overflow-y-auto">
+        <div className="flex-grow mb-4 overflow-y-auto">
           <FloatButton.Group
             trigger="hover"
             type="primary"
@@ -138,50 +176,43 @@ const Main = () => {
             <FloatButton />
             <FloatButton className={"bg-black"} />
           </FloatButton.Group>
-          <h2 className="text-2xl text-white font-bold mb-2">Chat History</h2>
-          {chatHistory.map((message, index) => (
-            <div key={index} className="mb-2">
-              <div className="flex justify-end mr-4">
-                <div className="bg-blue-200 p-2 rounded-lg max-w-md">
-                  <p className={"text-justify"}>
-                    {message.userMessage}{" "}
-                    {userPhotoURL == "" ? (
-                      <Avatar size={40}>USER</Avatar>
-                    ) : (
-                      <Avatar size={40} src={userPhotoURL}>
-                        USER
-                      </Avatar>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-start ml-4 mt-1">
-                <div className="bg-gray-200 p-2 rounded-lg max-w-md">
-                  <p className={"text-justify"}>
-                    <Avatar size={40}>BOT</Avatar> {message.botResponse}
-                    <SoundOutlined
-                      className="ml-2 cursor-pointer"
-                      onClick={() => handleSpeak(message.botResponse)}
-                    />
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Chat with Bot</h2>
-          <div className="messages mb-4">
+        <div className="flex flex-col justify-end overflow-y-auto">
+          <div className={"flex items-center justify-between"}>
+            <h2 className="text-2xl text-white font-bold mb-2">Chat History</h2>
+            <div>
+              <button
+                className={
+                  "text-white bg-blue-600 rounded-md mr-4 p-0.5 hover:bg-white hover:text-blue-600 transition-all duration-500"
+                }
+                onClick={() => navigate("/payment")}
+              >
+                Subscribe
+              </button>
+              <button
+                className={"text-white"}
+                onClick={() => navigate("/payment")}
+              >
+                Expiry date: {formattedDate}
+              </button>
+            </div>
+          </div>
+          <div className="messages mb-4 overflow-y-auto">
             {messages.map((message, index) => (
               <div key={index} className="mb-2">
                 <div className="flex justify-end mr-4">
                   <div className="bg-blue-200 p-2 rounded-lg max-w-md">
                     {userPhotoURL == "" ? (
-                      <Avatar size={40}>USER</Avatar>
+                      <p>
+                        <Avatar size={40}>USER</Avatar> {message.userMessage}
+                      </p>
                     ) : (
-                      <Avatar size={40} src={userPhotoURL}>
-                        USER
-                      </Avatar>
+                      <p>
+                        <Avatar size={40} src={userPhotoURL}>
+                          USER
+                        </Avatar>{" "}
+                        {message.userMessage}
+                      </p>
                     )}
                   </div>
                 </div>

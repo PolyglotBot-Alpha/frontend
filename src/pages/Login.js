@@ -25,6 +25,10 @@ const Login = () => {
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
   const auth = getAuth();
+  const currentDate = new Date();
+  const subscriptionExpiryDate = new Date(
+    currentDate.setDate(currentDate.getDate() + 1),
+  ).toISOString();
   auth.languageCode = "it";
 
   useEffect(() => {}, []);
@@ -127,6 +131,7 @@ const Login = () => {
         email: user.email,
         createdAt: new Date().toISOString(),
         updateAt: new Date().toISOString(),
+        subscriptionExpiryDate: subscriptionExpiryDate,
       });
 
       navigate("/");
@@ -149,6 +154,7 @@ const Login = () => {
           email: user.email,
           createdAt: new Date().toISOString(),
           updateAt: new Date().toISOString(),
+          subscriptionExpiryDate: subscriptionExpiryDate,
         });
       }
       navigate("/");
