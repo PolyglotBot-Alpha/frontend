@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -9,30 +9,27 @@ import {
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../components/AuthContext.js";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 const PaymentForm = ({ selectedPlan }) => {
+  const { user, Token } = useContext(AuthContext);
   const stripe = useStripe();
   const elements = useElements();
   const [postalCode, setPostalCode] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
   const auth = getAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        navigate("/login");
-      } else {
-        setUser(user);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [auth, navigate]);
+    if (!user && !Token) {
+      navigate("/login");
+    } else {
+      console.log(Token);
+    }
+  }, [user, Token, navigate]);
 
   const validateInputs = () => {
     const newErrors = {};
@@ -65,14 +62,18 @@ const PaymentForm = ({ selectedPlan }) => {
 
         const userID = user.uid;
         const tokenID = token.id;
-        console.log(userID);
-        console.log(token.id);
+        console.log("pay!!!!!!");
         const response = await axios.post(
           `${process.env.REACT_APP_API_BASE_URL}/user/users/subscribe`,
           {
             userId: userID,
             subscriptionType: selectedPlan,
             token: tokenID,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${Token}`,
+            },
           },
         );
 
@@ -83,7 +84,7 @@ const PaymentForm = ({ selectedPlan }) => {
           alert("Payment failed. Please try again.");
         }
       } catch (error) {
-        alert("Payment failed. Please try again.");
+        alert(`Payment failed. Please try again. ${error}`);
       } finally {
         setLoading(false);
       }

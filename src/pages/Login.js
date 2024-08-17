@@ -23,6 +23,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isConfirm, setIsConfirm] = useState(false);
   const [userName, setUserName] = useState("");
+  const [token, setToken] = useState("");
   const navigate = useNavigate();
   const auth = getAuth();
   const currentDate = new Date();
@@ -157,6 +158,9 @@ const Login = () => {
           subscriptionExpiryDate: subscriptionExpiryDate,
         });
       }
+      // const idToken = await user.getIdToken();
+      // setToken(idToken);
+
       navigate("/");
     } catch (error) {
       console.error("Google loginError:", error.message);
