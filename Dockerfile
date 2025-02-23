@@ -1,5 +1,5 @@
 # Specify a base image
-FROM node:14
+FROM node:16-alpine AS build
 
 LABEL authors="yuqi.guo17@gmail.com"
 
@@ -18,6 +18,13 @@ COPY . .
 # Build the application
 RUN npm run build
 
+FROM node:16-alpine AS production
+WORKDIR /app
+
+COPY --from=build /app/build ./build
+
+EXPOSE 3000
+
 # Start the app by serving the static files from the build directory
-CMD ["npx", "serve", "-s", "build"]
+CMD ["npx", "serve", "-l", "3000", "-s", "build"]
 

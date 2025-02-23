@@ -16,7 +16,7 @@ import { AuthContext } from "../components/AuthContext.js";
 import { signOut } from "firebase/auth";
 
 const Main = () => {
-  const { user, Token } = useContext(AuthContext);
+  const { user, Token, loading } = useContext(AuthContext);
   const [userId, setUserId] = useState("");
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState([]);
@@ -31,13 +31,16 @@ const Main = () => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
+    if (loading){
+      return;
+    }
     if (!user && !Token) {
       navigate("/login");
     } else {
       setUserId(user.uid);
       setUserPhotoURL(user.photoURL);
     }
-  }, [user, Token, navigate]);
+  }, [user, Token, navigate, loading]);
 
   useEffect(() => {
     if (userId && Token) {

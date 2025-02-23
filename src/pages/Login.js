@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "antd";
 import ToggleSwitch from "../components/ToggleSwitch.js";
@@ -12,6 +12,8 @@ import {
 import { auth, provider, signInWithPopup } from "../firebase-config.js";
 import { GoogleOutlined } from "@ant-design/icons";
 import axios from "axios";
+
+import { AuthContext } from "../components/AuthContext.js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -32,7 +34,21 @@ const Login = () => {
   ).toISOString();
   auth.languageCode = "it";
 
+
+  const { user:userFire, Token:TokenFire,  loading:loadingFire } = useContext(AuthContext);
+
   useEffect(() => {}, []);
+
+  useEffect(() => {
+    if (loadingFire){
+      return;
+    }
+    if (!userFire && !TokenFire) {
+      return;
+    } else {
+      navigate("/");
+    }
+  }, [userFire, TokenFire, navigate, loadingFire]);
 
   const handleToggle = () => {
     setIsSignUp(!isSignUp);
